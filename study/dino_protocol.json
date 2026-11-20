@@ -1,0 +1,11 @@
+{
+  "registered_on": "2026-10-14",
+  "sequence": "Additional frozen self-supervised baseline fixed while the ConvNeXt/Belgium extension was running; original GTSRB and some new ConvNeXt outcomes were already known",
+  "model": "Official DINOv2 ViT-S/14 distilled, no registers, frozen normalized class-token output (384 dimensions)",
+  "source": "facebookresearch/dinov2, resolved commit and source archive checksum recorded by dino_download.py",
+  "datasets": ["gtsrb", "belgium"],
+  "preprocessing": "Same registered per-dataset crops and direct 224x224 ImageNet-normalized resize as extension; FP16 autocast and cache",
+  "probe": "Unit-normalized signed features; multinomial logistic regression on all retained target training labels",
+  "selection": {"C": [0.1, 1.0, 10.0], "criterion": "validation accuracy only", "ties": "first grid entry", "test_evaluations": "one selected model per dataset"},
+  "interpretation": "One deterministic probe fit per dataset, no seed SD. Pretraining data and objective differ from ImageNet-supervised models, so differences do not isolate architecture or target label efficiency. No full fine-tuning or universal state-of-the-art claim."
+}

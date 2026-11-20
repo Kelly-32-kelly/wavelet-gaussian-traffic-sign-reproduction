@@ -1,0 +1,22 @@
+{
+  "registered_on": "2026-10-14",
+  "status": "Fixed before extension training and test evaluation; the original GTSRB results were already known",
+  "belgium_pretraining_audit_amendment": "2026-10-14, before Belgium feature extraction or training: also exclude training groups whose class/filename prefix is present in official test. This is a conservative identifier audit, not a claim that all collisions are the same physical sign. Test stays unchanged. Macro metrics use only test-supported classes; accuracy retains all 62 prediction alternatives.",
+  "datasets": {
+    "gtsrb": {"manifest": "data/manifest.json", "new_backbones": ["convnext_tiny"], "budgets": [100, 25]},
+    "belgium": {"manifest": "data/belgium/manifest.json", "new_backbones": ["vgg16", "convnext_tiny"], "budgets": [25, 10]}
+  },
+  "representation_seeds": [42, 314, 2718],
+  "backbone_compute": "Frozen pretrained backbone, CUDA autocast float16, float16 feature cache, eval mode",
+  "image_transform": "Provided inclusive ROI, bilinear resize to 224x224, ImageNet normalization, no augmentation; shared across backbones",
+  "vgg16_representation": "Original 25088-512-256-128-64 ReLU/dropout representation; ImageNet1K V1",
+  "convnext_representation": "TorchVision ImageNet1K V1; global average pooling followed by pretrained layer normalization; new 768-64 ReLU/dropout(0.5), temporary classification layer",
+  "training": {"optimizer": "Adam", "learning_rate": 0.0001, "weight_decay": 0.0005, "batch_size": 64, "max_epochs": 60, "cosine_eta_min": 0.000001, "early_stopping_patience": 8, "selection": "minimum validation cross entropy", "labels_used": "all training labels"},
+  "head_selection": {"seed": 42, "budget": "largest registered budget for each dataset", "C": [0.1, 1.0, 10.0], "wavelet_sigma": [1.0, 2.0, 4.0], "rbf_gamma": [0.09375, 0.375, 1.5], "metric": "validation accuracy", "tie_rule": "first entry in fixed loop order", "lock": "same selected config across seeds and budgets; separate selection for each dataset/backbone"},
+  "head_sampling": "balanced per-class upper bound; capped at available training examples without replacement; shared nested samples for all heads within a seed",
+  "head_names": ["softmax_none", "svm_rbf", "svm_wavelet", "twsvm_rbf", "twsvm_wavelet", "svm_rbf_matched", "twsvm_rbf_matched"],
+  "native_convnext_control": "Unit-normalized signed 768-dimensional frozen features, multinomial logistic regression with validation-only C selection. Balanced registered budgets at three sampling seeds, and all-training-label probe once per dataset. Not matched to the 64-dimensional representation adaptation label budget.",
+  "basis_diagnostic": "At sigma=2, fixed seed 20261014 random orthogonal change of basis and coordinate permutation; kernel discrepancies on fixed training pairs only, no classifier tuning or test-based selection",
+  "statistical_interpretation": "Seed means and sample SD; paired correctness for matched kernels, exact McNemar and Holm adjustment across newly added matched comparisons; image independence caveat remains",
+  "claims": "No state-of-the-art or wavelet superiority claim without supporting observations; no full fine-tuning or end-to-end few-shot claim"
+}

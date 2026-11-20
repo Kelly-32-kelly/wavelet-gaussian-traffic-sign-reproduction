@@ -1,0 +1,9 @@
+{
+  "registered_on": "2026-10-14",
+  "trigger": "All six initial frozen native-probe validation grids favoured the largest C=10. Initial test results had already been generated and were known. The expansion is exploratory, motivated by validation boundary selection, not prospectively registered with the initial study.",
+  "scope": "ConvNeXt native balanced and all-training probes on both datasets; DINOv2 all-training probes on both datasets",
+  "C": [0.1, 1.0, 10.0, 100.0, 1000.0],
+  "criterion": "validation accuracy only; first grid entry breaks ties; optimiser must converge",
+  "held_fixed": "Features, labels, splits, preprocessing, native feature normalization and sampling. Original and extension 64-D head configurations remain unchanged.",
+  "record_policy": "Preserve initial locks and copy initial prediction/model records to a local diagnostic archive. Use separate final expanded-grid locks for reported native probes. Export predictions from final selected models only; do not choose by test metrics."
+}
