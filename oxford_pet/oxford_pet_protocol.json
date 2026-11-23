@@ -1,0 +1,38 @@
+{
+  "status": "Protocol fixed before Oxford-IIIT Pet feature extraction, model training and test predictions. The traffic sign results were already available. This is a follow-up single-task validation of the original comparison protocol.",
+  "date": "2026-11-23",
+  "task": "37-class breed classification of entire Oxford-IIIT Pet images",
+  "data": {
+    "page": "https://www.robots.ox.ac.uk/~vgg/data/pets/",
+    "images_md5": "5c4f3ee8e5d25df40f4fd59a7f44e54c",
+    "annotations_md5": "95a8c909bbe2e81eed6a22bccdf3f68f",
+    "split_files": ["annotations/trainval.txt", "annotations/test.txt"],
+    "integrity": "Before training, check sample IDs, category map, file presence, decodability and SHA-256 of decoded RGB dimensions and pixel bytes. Report each exclusion. Preserve the official test IDs and labels for all decodable files, reporting exact-pixel test duplicates without deleting them. Exclude from development any ID or exact-pixel image also present in the test set, any conflicting development duplicate group and any missing or unreadable file. Keep the lexicographically first ID from each same-label development duplicate group.",
+    "validation_split": "From the audited official trainval rows, sort each class by sample ID, permute using one NumPy PCG64 generator seeded with 20261123 in ascending class-ID order, and take the first round(0.2*n) rows of each class for validation (minimum one, leaving at least one training row).",
+    "transform": "Full RGB image, direct bilinear resize to 224x224 and ImageNet normalization, no augmentation or ROI."
+  },
+  "model": {
+    "backbone": "TorchVision ConvNeXt-Tiny IMAGENET1K_V1 frozen, CUDA FP16 autocast with FP16 pooled and layer-normalized 768-channel features",
+    "weight_sha256": "983f1562536e84ff750a1576fb08e54de751dbf2e17c0d8a4a13704341fdcd3d",
+    "adapter": "768-to-64 linear, ReLU and dropout 0.5 with a temporary 37-class softmax output. Train on all labels in the training partition in FP32, export eval-mode L2-normalized features using the existing extension training code.",
+    "selection": "Minimum validation cross-entropy. Adam at 1e-4, weight decay 5e-4, batch size 64, cosine schedule to 1e-6 over 60 epochs, early stopping after 8 stale epochs."
+  },
+  "head_comparison": {
+    "seeds": [42, 314, 2718],
+    "budget_per_class": 25,
+    "sampling": "Existing balanced sampler, without replacement and capped at observed training count. The same subset and representation are used for all heads within each seed.",
+    "heads": ["softmax_none", "svm_rbf", "svm_wavelet", "twsvm_rbf", "twsvm_wavelet", "svm_rbf_matched", "twsvm_rbf_matched"],
+    "selection_seed": 42,
+    "penalty_grid": [0.1, 1, 10],
+    "wavelet_sigma_grid": [1, 2, 4],
+    "gaussian_gamma_grid": [0.09375, 0.375, 1.5],
+    "selection_rule": "Choose the largest validation accuracy within each head and kernel, with ties resolved by the first candidate in the original grid loop. Require optimal CVXOPT status in validation. Record all candidates and lock the settings before evaluating any test predictions. Carry the seed-42 selection to all seeds.",
+    "matching_rule": "For each wavelet head fit the same classifier with the Gaussian exponent gamma = 3/(2*sigma^2) and the selected wavelet penalty. Keep the independently tuned Gaussian as a separate reference.",
+    "locked_fit_solver": "Use the same CVXOPT solver as in validation. Allow the original independently checked L-BFGS-B fallback on the identical box-constrained QP only for locked test fits. Report any failure with its diagnostics."
+  },
+  "analysis": {
+    "primary": "Per-seed wavelet-minus-matched-Gaussian image accuracy for SVM and TWSVM. Report discordant correctness counts, exact McNemar p-values with Holm correction across six results, and exploratory pointwise 95% intervals from the difference of the 97.5% marginal Clopper-Pearson intervals.",
+    "secondary": "Mean and sample SD over the three seeds for each head's test image accuracy and macro F1, plus complete predictions and scores. Report the original training-only basis diagnostic with sigma=2 and 4096 image pairs per seed, fixed RNG seed 20261014.",
+    "interpretation": "The seeds use the same test images. The intervals assume independent images within each comparison. Exact-duplicate checks do not establish distinct physical animals. The follow-up examines a different task with one representation and one head budget and does not establish equivalence or a general accuracy ranking."
+  }
+}
